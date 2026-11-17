@@ -1,4 +1,4 @@
-# Khidmah SQL Assistant
+ # SQL Assistant
 
 A natural-language interface to a MySQL database, built with LlamaIndex + Groq. Ask
 questions in plain English, get answers backed by generated SQL.
@@ -51,33 +51,3 @@ streamlit run streamlit_app.py
 ```
 Opens a chat window in your browser.
 
-## Notes on Groq models
-
-Groq periodically retires/renames models. If you see `openai.NotFoundError: ...
-model_not_found`, check what your API key currently has access to:
-
-```
-python -c "
-import requests
-r = requests.get('https://api.groq.com/openai/v1/models',
-    headers={'Authorization': 'Bearer <your-key>'})
-for m in r.json()['data']:
-    print(m['id'])
-"
-```
-
-Then update `GROQ_MODEL` in `.env` accordingly. Avoid the
-`openai/gpt-oss-*` family for this ReAct pipeline — those models are prone to
-emitting a spontaneous tool-call even when no tools were sent in the request,
-which Groq's server rejects with `Tool choice is none, but model called a tool`.
-
-## Known limitations
-
-- No conversation memory: each question is answered independently. The backend
-  doesn't retain any state between requests, and the Streamlit chat history is
-  purely a local display list, never sent back to the API.
-- Broad "list everything" style questions (e.g. "list all customers") force the
-  response synthesizer through multiple sequential LLM refine calls and can be
-  slow — narrower or aggregate questions resolve much faster.
-- Groq's free/on-demand tier enforces output-tokens-per-minute limits per model;
-  `max_tokens` is capped in `app.py` to stay under them.
