@@ -11,11 +11,12 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 from system_prompt import AGENT_SYSTEM_PROMPT, TEXT_TO_SQL_PROMPT, RESPONSE_SYNTHESIS_PROMPT
 
-
+from token_handler import token_counter, callback_manager
 
 from llama_index.core import Settings
 
 Settings.embed_model = None
+Settings.callback_manager = callback_manager   # must be set before creating llm
 
 
 import logging
@@ -100,15 +101,6 @@ agent = ReActAgent(
     max_iterations=5
 )
 
-# ---------------------------
-# 6. Flask App
-# ---------------------------
-# app = Flask(__name__)
-
-# @app.route("/", methods=["GET"])
-# def home():
-#     return "Server is running!"
-
 from quart import Quart, request, jsonify
 
 app = Quart(__name__)
@@ -125,8 +117,11 @@ async def query():
     if not user_question:
         return jsonify({"error": "Missing 'question' field"}), 400
 
-    # Synchronous LLM call
-    response = await agent.run(user_question) 
+    token_counter.reset_counts()
+    response = await agent.run(user_question)
+    print(f"Tokens - prompt: {token_counter.prompt_llm_token_count}, "
+          f"completion: {token_counter.completion_llm_token_count}, "
+          f"total: {token_counter.total_llm_token_count}")
 
     return jsonify({
         "question": user_question,
