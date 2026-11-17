@@ -1,0 +1,27 @@
+# ---------- Backend (app.py) ----------
+Quart==0.20.0
+Hypercorn==0.18.0
+python-dotenv==1.2.1
+
+# LLM / LlamaIndex
+groq==0.37.1
+llama-index==0.14.10
+llama-index-core==0.14.10
+llama-index-llms-groq==0.4.1
+
+# Database
+SQLAlchemy==2.0.45
+PyMySQL==1.1.2
+cryptography==46.0.3        # needed by PyMySQL for MySQL 8 login
+psycopg2-binary==2.9.11     # only if DB_DRIVER=postgresql+psycopg2
+
+# ---------- Chat UI (streamlit_app.py) ----------
+streamlit==1.62.0
+requests==2.32.5
+
+# ---------- Older backend (groq_code.py) / token_handler.py ----------
+Flask==3.1.2
+flask-cors==6.0.2
+llama-index-embeddings-huggingface==0.6.1
+sentence-transformers==5.2.0
+transformers==4.57.3
