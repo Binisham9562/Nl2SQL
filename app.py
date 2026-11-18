@@ -128,9 +128,9 @@ async def query():
         "answer": str(response),
     }), 200
 
-if __name__ == "__main__":
-    app.run(
-        # host=os.getenv("APP_HOST"),
-        # port=int(os.getenv("APP_PORT")),
-        debug=os.getenv("APP_DEBUG", "false").lower() == "true",
-    )
+# if __name__ == "__main__":
+#     app.run(
+#         # host=os.getenv("APP_HOST"),
+#         # port=int(os.getenv("APP_PORT")),
+#         debug=os.getenv("APP_DEBUG", "false").lower() == "true",
+#     )
