@@ -130,7 +130,7 @@ async def query():
 
 if __name__ == "__main__":
     app.run(
-        host=os.getenv("APP_HOST"),
-        port=int(os.getenv("APP_PORT")),
+        # host=os.getenv("APP_HOST"),
+        # port=int(os.getenv("APP_PORT")),
         debug=os.getenv("APP_DEBUG", "false").lower() == "true",
     )
