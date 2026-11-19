@@ -7,15 +7,16 @@ from llama_index.core.agent import ReActAgent
 from llama_index.core.tools import ToolMetadata,FunctionTool
 from llama_index.core import SQLDatabase
 from llama_index.core.indices.struct_store import NLSQLTableQueryEngine
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 from system_prompt import AGENT_SYSTEM_PROMPT, TEXT_TO_SQL_PROMPT, RESPONSE_SYNTHESIS_PROMPT
 
-
+from token_handler import token_counter, callback_manager
 
 from llama_index.core import Settings
 
 Settings.embed_model = None
+Settings.callback_manager = callback_manager   # must be set before creating llm
 
 
 import logging
@@ -49,7 +50,7 @@ from urllib.parse import quote_plus
 
 DB_DRIVER = os.getenv("DB_DRIVER", "mysql+pymysql")
 DB_USER = require_env("DB_USER")
-DB_PASS = quote_plus(require_env("DB_PASS"))  # handles special chars like '@'
+DB_PASS = quote_plus(os.getenv("DB_PASS", "admin123"))  # handles special chars like '@'
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = require_env("DB_NAME")
@@ -100,15 +101,6 @@ agent = ReActAgent(
     max_iterations=5
 )
 
-# ---------------------------
-# 6. Flask App
-# ---------------------------
-# app = Flask(__name__)
-
-# @app.route("/", methods=["GET"])
-# def home():
-#     return "Server is running!"
-
 from quart import Quart, request, jsonify
 
 app = Quart(__name__)
@@ -125,17 +117,28 @@ async def query():
     if not user_question:
         return jsonify({"error": "Missing 'question' field"}), 400
 
-    # Synchronous LLM call
-    response = await agent.run(user_question) 
+    token_counter.reset_counts()
+    response = await agent.run(user_question)
+    print(f"Tokens - prompt: {token_counter.prompt_llm_token_count}, "
+          f"completion: {token_counter.prompt_llm_token_count}, "
+          f"total: {token_counter.total_llm_token_count}")
 
     return jsonify({
         "question": user_question,
         "answer": str(response),
     }), 200
 
+
+@app.route("/count/<table>", methods=["GET"])
+async def count_rows(table):
+    with engine.connect() as conn:
+        total = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
+    return jsonify({"table": table, "rows": total}), 200
+
+
 if __name__ == "__main__":
     app.run(
-        host=os.getenv("APP_HOST"),
-        port=int(os.getenv("APP_PORT")),
+        # host=os.getenv("APP_HOST"),
+        # port=int(os.getenv("APP_PORT")),
         debug=os.getenv("APP_DEBUG", "false").lower() == "true",
     )
